@@ -31,9 +31,17 @@ namespace YoBit
         public MainWindow()
         {
             InitializeComponent();
-            int num = 0;
-            TimerCallback tm = new TimerCallback(Refresh);
-            Timer timer = new Timer(tm, num, 0, 2000);
+
+            System.Windows.Threading.DispatcherTimer refreshTimer = new System.Windows.Threading.DispatcherTimer();
+            refreshTimer.Tick += DispatcherTimer_Tick;
+            refreshTimer.Interval = new TimeSpan(0, 0, 2);
+            refreshTimer.Start();
+        }
+
+        private void DispatcherTimer_Tick(object sender, EventArgs e)
+        {
+            GetInfo();
+            Depth(Properties.Settings.Default.pair);
         }
 
         public void GetInfo()
@@ -80,7 +88,7 @@ namespace YoBit
                     {
                         string jsonResponse = sr.ReadToEnd();
                         JObject responce = JObject.Parse(jsonResponse);
-                        Console.WriteLine(jsonResponse);
+                        //Console.WriteLine(jsonResponse);
                         if (responce["success"].ToString() == "1")
                         {
                             FundsLV.Items.Clear();
@@ -429,11 +437,6 @@ namespace YoBit
             ActiveOrders(Properties.Settings.Default.pair);
         }
 
-        async Task Refresh(object obj)
-        {
-            GetInfo();
-            Depth(Properties.Settings.Default.pair);
-        }
     }
 
     class OrderTable

@@ -9,20 +9,24 @@
     <TabControl x:Name="tabControl" Margin="0,0,2,2">
         <TabItem x:Name="mainTab" Header="Главная" GotFocus="mainTab_GotFocus">
             <Grid Background="#FFE5E5E5">
-                <Button x:Name="btnRefresh" Content="Refresh" Margin="0,5,10,0" VerticalAlignment="Top" Click="Button_Click" HorizontalAlignment="Right" Width="130"/>
-                <ListView x:Name="FundsLV" Margin="10,10,749,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="156*"/>
+                    <ColumnDefinition Width="907*"/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="btnRefresh" Content="Refresh" Margin="0,5,10,0" VerticalAlignment="Top" Click="Button_Click" HorizontalAlignment="Right" Width="130" Grid.Column="1"/>
+                <ListView x:Name="FundsLV" Margin="10,10,749,10" Grid.ColumnSpan="2">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn/>
                         </GridView>
                     </ListView.View>
                 </ListView>
-                <Button x:Name="btnDepth" Content="Depth" Margin="0,30,10,0" VerticalAlignment="Top" Click="btnDepth_Click" HorizontalAlignment="Right" Width="130"/>
-                <DataGrid x:Name="orderBuy" HorizontalAlignment="Right" Margin="0,0,389,10" Width="326" Height="278" VerticalAlignment="Bottom" SelectionMode="Single" CanUserResizeColumns="False" MouseUp="orderBuy_MouseUp" IsEnabled="False"/>
-                <Label Content="Ордера на продажу" HorizontalAlignment="Right" Margin="0,282,595,0" Height="26" VerticalAlignment="Top"/>
-                <Label Content="Ордера на покупку" HorizontalAlignment="Right" Margin="0,282,236,0" Height="26" VerticalAlignment="Top"/>
-                <StackPanel HorizontalAlignment="Left" Height="100" Margin="677,87,0,0" VerticalAlignment="Top" Width="100"/>
-                <Canvas x:Name="canvasBuy" Height="259" Margin="348,0,462,332" VerticalAlignment="Bottom" Background="#FF8AFBC3">
+                <Button x:Name="btnDepth" Content="Depth" Margin="0,30,10,0" VerticalAlignment="Top" Click="btnDepth_Click" HorizontalAlignment="Right" Width="130" Grid.Column="1"/>
+                <DataGrid x:Name="orderBuy" HorizontalAlignment="Right" Margin="0,0,389,10" Width="326" Height="278" VerticalAlignment="Bottom" SelectionMode="Single" CanUserResizeColumns="False" MouseUp="orderBuy_MouseUp" IsEnabled="False" Grid.Column="1"/>
+                <Label Content="Ордера на продажу" HorizontalAlignment="Right" Margin="0,282,595,0" Height="26" VerticalAlignment="Top" Grid.Column="1"/>
+                <Label Content="Ордера на покупку" HorizontalAlignment="Right" Margin="0,282,236,0" Height="26" VerticalAlignment="Top" Grid.Column="1"/>
+                <StackPanel HorizontalAlignment="Left" Height="100" Margin="521,87,0,0" VerticalAlignment="Top" Width="100" Grid.Column="1"/>
+                <Canvas x:Name="canvasBuy" Height="259" Margin="192,0,462,332" VerticalAlignment="Bottom" Background="#FF8AFBC3" Grid.Column="1">
                     <Label Content="Баланс" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Top="40"/>
                     <Label x:Name="lblBalanceBuy" Content="" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Left="174" Canvas.Top="40"/>
                     <Label Content="Количество:" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Top="73"/>
@@ -38,7 +42,7 @@
                     <Label Content="Покупка" Canvas.Left="10" Canvas.Top="6" FontSize="14" FontWeight="Bold" Width="96"/>
                     <Button Content="Купить" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Canvas.Left="168" Canvas.Top="229" Click="Button_Click_1"/>
                 </Canvas>
-                <Canvas x:Name="canvasSell" Height="259" Margin="627,0,183,332" VerticalAlignment="Bottom" Background="#FF91DBF7">
+                <Canvas x:Name="canvasSell" Height="259" Margin="471,0,183,332" VerticalAlignment="Bottom" Background="#FF91DBF7" Grid.Column="1">
                     <Label Content="Баланс" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Top="40"/>
                     <Label x:Name="lblBalanceSell" Content="" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Left="174" Canvas.Top="40"/>
                     <Label Content="Количество:" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Top="67" Canvas.Left="4"/>
@@ -54,15 +58,15 @@
                     <Label Content="Продажа" Canvas.Left="10" Canvas.Top="6" FontSize="14" FontWeight="Bold" Width="96"/>
                     <Button Content="Продать" Canvas.Left="168" Canvas.Top="229" Width="75" Click="Button_Click_2"/>
                 </Canvas>
-                <DataGrid x:Name="orderSell" HorizontalAlignment="Right" Margin="0,0,34,10" Width="326" Height="278" VerticalAlignment="Bottom" SelectionMode="Single" MouseUp="orderSell_MouseUp" IsEnabled="False"/>
-                <Button x:Name="TradeBtn" Content="Бабло" HorizontalAlignment="Left" Margin="880,168,0,0" VerticalAlignment="Top" Width="127" FontSize="22" BorderThickness="0" Height="127" Cursor="Hand" FontWeight="Bold" Click="Button_Click_3" IsHitTestVisible="True">
+                <DataGrid x:Name="orderSell" HorizontalAlignment="Right" Margin="0,0,34,10" Width="326" Height="278" VerticalAlignment="Bottom" SelectionMode="Single" MouseUp="orderSell_MouseUp" IsEnabled="False" Grid.Column="1"/>
+                <Button x:Name="TradeBtn" Content="Бабло" HorizontalAlignment="Left" Margin="724,168,0,0" VerticalAlignment="Top" Width="127" FontSize="22" BorderThickness="0" Height="127" Cursor="Hand" FontWeight="Bold" Click="Button_Click_3" IsHitTestVisible="True" Grid.Column="1">
                     <Button.Background>
                         <ImageBrush ImageSource="RedBtn.png"/>
                     </Button.Background>
                 </Button>
-                <TextBox x:Name="percentBox" HorizontalAlignment="Left" Height="23" Margin="943,126,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="41"/>
-                <Label Content="Наценка в процентах" HorizontalAlignment="Left" Margin="901,95,0,0" VerticalAlignment="Top"/>
-                <Button Content="Button" HorizontalAlignment="Left" Margin="943,68,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click_4"/>
+                <TextBox x:Name="percentBox" HorizontalAlignment="Left" Height="23" Margin="787,126,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="41" Grid.Column="1"/>
+                <Label Content="Наценка в процентах" HorizontalAlignment="Left" Margin="745,95,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+                <Button Content="Button" HorizontalAlignment="Left" Margin="787,68,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click_4" Grid.Column="1"/>
             </Grid>
         </TabItem>
         <TabItem x:Name="settingsTab" Header="Настройки" GotFocus="settingsTab_GotFocus">
@@ -77,5 +81,6 @@
                 <TextBox x:Name="pairBox" HorizontalAlignment="Left" Height="23" Margin="10,213,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="462"/>
             </Grid>
         </TabItem>
+        
     </TabControl>
 </Window>
