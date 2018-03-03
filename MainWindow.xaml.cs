@@ -15,14 +15,11 @@ using System.Windows.Shapes;
 
 using System.Security.Cryptography;
 
-using System.IO;
-using System.IO.Ports;
 using System.Net;
 
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Globalization;
-using System.Threading;
+using System.Collections;
 
 namespace YoBit
 {
@@ -31,17 +28,27 @@ namespace YoBit
         public MainWindow()
         {
             InitializeComponent();
-
-            System.Windows.Threading.DispatcherTimer refreshTimer = new System.Windows.Threading.DispatcherTimer();
-            refreshTimer.Tick += DispatcherTimer_Tick;
-            refreshTimer.Interval = new TimeSpan(0, 0, 2);
-            refreshTimer.Start();
+            RefreshData();
         }
 
-        private void DispatcherTimer_Tick(object sender, EventArgs e)
+        private void Window_Initialized(object sender, EventArgs e)
         {
-            GetInfo();
-            Depth(Properties.Settings.Default.pair);
+            if (Properties.Settings.Default.key == string.Empty || Properties.Settings.Default.secret == string.Empty)
+            {
+                /*settingsTab.Focus();
+                mainTab.IsEnabled = false;*/
+            }
+            
+        }
+
+        async Task RefreshData()
+        {
+            while(true)
+            {
+                await Task.Delay(2000);
+                //Task.Factory.StartNew(()=> Depth(Properties.Settings.Default.pair));
+                Depth(Properties.Settings.Default.pair);
+            }
         }
 
         public void GetInfo()
@@ -91,7 +98,8 @@ namespace YoBit
                         //Console.WriteLine(jsonResponse);
                         if (responce["success"].ToString() == "1")
                         {
-                            FundsLV.Items.Clear();
+                            FundsLB.Items.Clear();
+                            Dictionary<string, double> fundsArray = new Dictionary<string, double>();
                             IList<JToken> funds = responce["return"]["funds_incl_orders"].Children().ToList();
                             foreach (JToken fund in funds)
                             {
@@ -100,6 +108,7 @@ namespace YoBit
                                 try
                                 {
                                     fundCount = Double.Parse(fund.ToString().Substring(fund.ToString().IndexOf(':') + 1), CultureInfo.InvariantCulture);
+                                    fundsArray.Add(fundName,fundCount);
                                 }
                                 catch (FormatException exc)
                                 {
@@ -109,12 +118,15 @@ namespace YoBit
                                 {
                                     MessageBox.Show($"Выход за пределы. {fundName}");
                                 }
-                                FundsLV.Items.Add(fundName + ": " + fundCount.ToString("F8"));
+                                
+                                //fundsArray.so
+                                //FundsLB.Items.Add(fundName + ": " + fundCount.ToString("F8"));
                             }
+                            var sortedDict = from entry in fundsArray orderby entry.Value ascending select entry;
+                            Console.WriteLine(sortedDict);
+                            FundsLB.ItemsSource = sortedDict;
                         }
-                        else MessageBox.Show("Неудачная попытка, проверьте соединение, или данные, " +
-                        "скорее всего косяк за Вами, потому что прога работает на ура, даже доебаться не до чего, " +
-                        "а вот Вы скорее всего косяк, проверяйте.");
+                        else MessageBox.Show("Неудачная попытка, проверьте соединение, или данные.");
 
 
                     }
@@ -171,9 +183,7 @@ namespace YoBit
                         if (responce["success"].ToString() == "1") return true;                        
                         else 
                         {
-                            MessageBox.Show("Неудачная попытка, проверьте соединение, или данные, " +
-                            "скорее всего косяк за Вами, потому что прога работает на ура, даже доебаться не до чего, " +
-                            "а вот Вы скорее всего косяк, проверяйте.");
+                            MessageBox.Show("Неудачная попытка, проверьте соединение, или данные.");
                             return false;
                         }
                     }
@@ -294,26 +304,16 @@ namespace YoBit
                             orderSell.Columns[1].Header = orderBuy.Columns[1].Header;
                             orderSell.Columns[2].Header = orderBuy.Columns[2].Header;
                         }
-                        else MessageBox.Show("Неудачная попытка, проверьте соединение, или данные, " +
-                        "скорее всего косяк за Вами, потому что прога работает на ура, даже доебаться не до чего, " +
-                        "а вот Вы скорее всего косяк, проверяйте.");
+                        else MessageBox.Show("Неудачная попытка, проверьте соединение, или данные.");
                     }
                 }
             }
         }
-
-        private void Window_Initialized(object sender, EventArgs e)
-        {
-            if (Properties.Settings.Default.key == string.Empty || Properties.Settings.Default.secret == string.Empty)
-            {
-                settingsTab.Focus();
-                mainTab.IsEnabled = false;
-            }
-        }
+ 
 
         private void SaveSettingsBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (keyBox.Text != string.Empty || secretBox.Text != string.Empty)
+            /*if (keyBox.Text != string.Empty || secretBox.Text != string.Empty)
             {
                 mainTab.IsEnabled = true;
                 Properties.Settings.Default.key = keyBox.Text;
@@ -322,7 +322,7 @@ namespace YoBit
                 Properties.Settings.Default.Save();
                 mainTab.Focus();
             }
-            else MessageBox.Show("Вы забыли заполнить одно из полей.");
+            else MessageBox.Show("Вы забыли заполнить одно из полей.");*/
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -332,9 +332,9 @@ namespace YoBit
 
         private void settingsTab_GotFocus(object sender, RoutedEventArgs e)
         {
-            //тут полная жопа, надо что-то делать, чтобы можно было менять значения в настройках
-            keyBox.Text = Properties.Settings.Default.key;
-            secretBox.Text = Properties.Settings.Default.secret;
+            
+            //keyBox.Text = Properties.Settings.Default.key;
+            //secretBox.Text = Properties.Settings.Default.secret;
             //pairBox.Text = Properties.Settings.Default.pair;
         }
 
@@ -429,7 +429,7 @@ namespace YoBit
             double amount = Convert.ToDouble(tbCountBuy.Text);
             double percent = rate * Convert.ToDouble(percentBox.Text)/100;
             if (Trade(pair, "buy", rate, amount))
-             if (!Trade(pair, "sell", rate + percent, amount)) MessageBox.Show("Че то пошло не так, Саня, не продаются монеты, Саня, это жопа.");
+             if (!Trade(pair, "sell", rate + percent, amount)) MessageBox.Show("Че то пошло не так.");
         }
 
         private void Button_Click_4(object sender, RoutedEventArgs e)
@@ -437,18 +437,11 @@ namespace YoBit
             ActiveOrders(Properties.Settings.Default.pair);
         }
 
-    }
-
-    class OrderTable
-    {
-        public OrderTable(double price, double coin1, double coin2)
+        private void MenuSettings_Click(object sender, RoutedEventArgs e)
         {
-            this.price = price.ToString("F8");
-            this.coin1 = coin1.ToString("F8");
-            this.coin2 = coin2.ToString("F8");
+            Settings settings = new Settings();
+            settings.ShowDialog();
         }
-        public string price { get; set; }
-        public string coin1 { get; set; }
-        public string coin2 { get; set; }
+
     }
 }
