@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,6 +21,7 @@ using System.Net;
 using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.Collections;
+using System.ComponentModel;
 
 namespace YoBit
 {
@@ -28,7 +30,7 @@ namespace YoBit
         public MainWindow()
         {
             InitializeComponent();
-            RefreshData();
+            Task.Run(()=>RefreshData());
         }
 
         private void Window_Initialized(object sender, EventArgs e)
@@ -43,11 +45,15 @@ namespace YoBit
 
         async Task RefreshData()
         {
+            ApiFunctions api = new ApiFunctions();
             while(true)
             {
+                //await Task.Run(() => Depth(Properties.Settings.Default.pair));
                 await Task.Delay(2000);
-                //Task.Factory.StartNew(()=> Depth(Properties.Settings.Default.pair));
-                Depth(Properties.Settings.Default.pair);
+                Task.Factory.StartNew(()=> Depth(Properties.Settings.Default.pair));
+                //Thread thread = new Thread(api.Depth);
+                //thread.Start();
+                
             }
         }
 
@@ -122,9 +128,10 @@ namespace YoBit
                                 //fundsArray.so
                                 //FundsLB.Items.Add(fundName + ": " + fundCount.ToString("F8"));
                             }
-                            var sortedDict = from entry in fundsArray orderby entry.Value ascending select entry;
-                            Console.WriteLine(sortedDict);
-                            FundsLB.ItemsSource = sortedDict;
+                            //var sortedDict = from entry in fundsArray orderby entry.Value ascending select entry;
+                            
+                            //Console.WriteLine(fundsArray);
+                            FundsLB.ItemsSource = fundsArray.OrderBy(x => x.Value).Select(x => x.Key);
                         }
                         else MessageBox.Show("Неудачная попытка, проверьте соединение, или данные.");
 
@@ -242,72 +249,85 @@ namespace YoBit
 
         public void Depth(string fundName)
         {
-            orderBuy.IsEnabled = true;
-            orderBuy.ItemsSource = "";
-            //orderBuy.Items.Clear();
-
-            orderSell.IsEnabled = true;
-            orderSell.ItemsSource = "";
-
-            string address = "https://yobit.io/api/3/depth/" + fundName;
-            WebRequest webRequest = (HttpWebRequest)System.Net.WebRequest.Create(address);
-            if (webRequest != null)
+            Dispatcher.Invoke(() =>
             {
-                webRequest.Method = "POST";
-                webRequest.Timeout = 20000;
-                webRequest.ContentType = "application/x-www-form-urlencoded";
+                //orderBuy.Dispatcher.BeginInvoke(new Action(delegate ()
+                //{
+                orderBuy.IsEnabled = true;
+                orderBuy.ItemsSource = "";
+                //}));
 
-                using (System.IO.Stream s = webRequest.GetResponse().GetResponseStream())
+                //orderSell.Dispatcher.BeginInvoke(new Action(delegate ()
+                //{
+                orderSell.IsEnabled = true;
+                orderSell.ItemsSource = "";
+                //}));
+
+
+                string address = "https://yobit.io/api/3/depth/" + fundName;
+                WebRequest webRequest = (HttpWebRequest)System.Net.WebRequest.Create(address);
+                if (webRequest != null)
                 {
-                    using (System.IO.StreamReader sr = new System.IO.StreamReader(s))
+                    webRequest.Method = "POST";
+                    webRequest.Timeout = 20000;
+                    webRequest.ContentType = "application/x-www-form-urlencoded";
+
+                    using (System.IO.Stream s = webRequest.GetResponse().GetResponseStream())
                     {
-                        string jsonResponse = sr.ReadToEnd();
-                        if (jsonResponse.IndexOf("success") < 0)
+                        using (System.IO.StreamReader sr = new System.IO.StreamReader(s))
                         {
-                            JObject responce = JObject.Parse(jsonResponse);
-
-                            IList<JToken> asks = responce[fundName]["asks"].Children().ToList();
-                            IList<JToken> bids = responce[fundName]["bids"].Children().ToList();
-
-                            List<OrderTable> buyTable = new List<OrderTable>(3);
-                            List<OrderTable> sellTable = new List<OrderTable>(3);
-                            foreach (JToken ask in asks)
+                            string jsonResponse = sr.ReadToEnd();
+                            if (jsonResponse.IndexOf("success") < 0)
                             {
+                                JObject responce = JObject.Parse(jsonResponse);
 
-                                double coin1, coin2, price = 0.0;
-                                price = Convert.ToDouble(ask[0].ToString());
-                                coin1 = Convert.ToDouble(ask[1].ToString());
-                                coin2 = Math.Round(coin1 * price,8);
+                                IList<JToken> asks = responce[fundName]["asks"].Children().ToList();
+                                IList<JToken> bids = responce[fundName]["bids"].Children().ToList();
 
-                                buyTable.Add(new OrderTable(price, coin1, coin2));
+                                List<OrderTable> buyTable = new List<OrderTable>(3);
+                                List<OrderTable> sellTable = new List<OrderTable>(3);
+                                foreach (JToken ask in asks)
+                                {
 
+                                    double coin1, coin2, price = 0.0;
+                                    price = Convert.ToDouble(ask[0].ToString());
+                                    coin1 = Convert.ToDouble(ask[1].ToString());
+                                    coin2 = Math.Round(coin1 * price, 8);
 
+                                    buyTable.Add(new OrderTable(price, coin1, coin2));
+                                }
+
+                                foreach (JToken bid in bids)
+                                {
+                                    double coin1, coin2, price = 0.0;
+                                    price = Convert.ToDouble(bid[0].ToString());
+                                    coin1 = Convert.ToDouble(bid[1].ToString());
+                                    coin2 = Math.Round(coin1 * price, 8);
+
+                                    sellTable.Add(new OrderTable(price, coin1, coin2));
+                                }
+
+                                //orderBuy.Dispatcher.BeginInvoke(new Action(delegate ()
+                                //{
+                                orderBuy.ItemsSource = buyTable;
+                                orderBuy.Columns[0].Header = "Цена";
+                                orderBuy.Columns[1].Header = fundName.Substring(0, fundName.IndexOf('_')).ToUpper();
+                                orderBuy.Columns[2].Header = fundName.Substring(fundName.IndexOf('_') + 1).ToUpper();
+                                //}));
+
+                                //orderSell.Dispatcher.BeginInvoke(new Action(delegate ()
+                                //{
+                                orderSell.ItemsSource = sellTable;
+                                orderSell.Columns[0].Header = "Цена";
+                                orderSell.Columns[1].Header = orderBuy.Columns[1].Header;
+                                orderSell.Columns[2].Header = orderBuy.Columns[2].Header;
+                                //}));
                             }
-                            
-                            foreach (JToken bid in bids)
-                            {
-                                double coin1, coin2, price = 0.0;
-                                price = Convert.ToDouble(bid[0].ToString());
-                                coin1 = Convert.ToDouble(bid[1].ToString());
-                                coin2 = Math.Round(coin1 * price, 8);
-
-                                sellTable.Add(new OrderTable(price, coin1, coin2));
-                            }
-                            
-                            orderBuy.ItemsSource = buyTable;
-                            orderBuy.Columns[0].Header = "Цена";
-                            orderBuy.Columns[1].Header = fundName.Substring(0, fundName.IndexOf('_')).ToUpper();
-                            orderBuy.Columns[2].Header = fundName.Substring(fundName.IndexOf('_') + 1).ToUpper();
-
-                            orderSell.ItemsSource = sellTable;
-                            orderSell.Columns[0].Header = "Цена";
-                            orderSell.Columns[1].Header = orderBuy.Columns[1].Header;
-                            orderSell.Columns[2].Header = orderBuy.Columns[2].Header;
+                            else MessageBox.Show("Неудачная попытка, проверьте соединение, или данные.");
                         }
-                        else MessageBox.Show("Неудачная попытка, проверьте соединение, или данные.");
                     }
                 }
-            }
+            });           
         }
  
 

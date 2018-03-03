@@ -2,3 +2,4 @@
 /obj
 /*.resx
 /*.csproj
+/ApiFunctions.cs
